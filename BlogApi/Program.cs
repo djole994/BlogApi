@@ -5,7 +5,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    WebRootPath = "wwwroot"
+});
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -63,6 +67,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("AllowReactApp");
 //app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
