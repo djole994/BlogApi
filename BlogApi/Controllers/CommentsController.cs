@@ -16,14 +16,28 @@ namespace BlogAPI.Controllers
             _context = context;
         }
 
-        // GET: api/comments/post/5 - svi komentari za dati post
         [HttpGet("post/{postId}")]
         public async Task<IActionResult> GetCommentsForPost(int postId)
         {
             var comments = await _context.Comments
                 .Include(c => c.User)
                 .Where(c => c.BlogPostId == postId)
+                .Select(c => new CommentResponseDto
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt,
+                    BlogPostId = c.BlogPostId,
+                    UserId = c.UserId,
+                    User = c.User == null ? null : new UserDto
+                    {
+                        Id = c.User.Id,
+                        Username = c.User.Username,
+                        ProfileImageUrl = c.User.ProfileImageUrl
+                    }
+                })
                 .ToListAsync();
+
             return Ok(comments);
         }
 
@@ -72,5 +86,22 @@ namespace BlogAPI.Controllers
         public string Content { get; set; } = string.Empty;
         public int BlogPostId { get; set; }
         public int UserId { get; set; }
+    }
+
+    public class UserDto
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string? ProfileImageUrl { get; set; }
+    }
+
+    public class CommentResponseDto
+    {
+        public int Id { get; set; }
+        public string Content { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public int BlogPostId { get; set; }
+        public int UserId { get; set; }
+        public UserDto? User { get; set; }
     }
 }
