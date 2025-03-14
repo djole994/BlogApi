@@ -2,6 +2,7 @@
 using BlogAPI.Models;
 using BlogApi.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BlogAPI.Controllers
 {
@@ -66,6 +67,21 @@ namespace BlogAPI.Controllers
             return Ok(comment);
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentDto dto)
+        {
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment == null)
+                return NotFound("Komentar nije pronađen.");
+
+      
+            comment.Content = dto.Content;
+            await _context.SaveChangesAsync();
+
+            return Ok(comment);
+        }
+
+
         // DELETE: api/comments/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteComment(int id)
@@ -73,6 +89,10 @@ namespace BlogAPI.Controllers
             var comment = await _context.Comments.FindAsync(id);
             if (comment == null)
                 return NotFound("Komentar nije pronađen.");
+
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null || userId != comment.UserId.ToString())
+                return Forbid("Nije dozvoljeno brisanje tuđih komentara.");
 
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
@@ -86,6 +106,10 @@ namespace BlogAPI.Controllers
         public string Content { get; set; } = string.Empty;
         public int BlogPostId { get; set; }
         public int UserId { get; set; }
+    }
+    public class UpdateCommentDto
+    {
+        public string Content { get; set; } = string.Empty;
     }
 
     public class UserDto
