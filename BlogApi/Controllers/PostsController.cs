@@ -2,6 +2,8 @@
 using BlogAPI.Models;
 using BlogApi.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BlogAPI.Controllers
 {
@@ -42,10 +44,13 @@ namespace BlogAPI.Controllers
 
         // POST: api/posts
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
         {
-            // U stvarnoj aplikaciji, korisnikov Id bi se izvukao iz tokena
-            var user = await _context.Users.FindAsync(dto.UserId);
+            // ID korisnika uzimamo iz tokena, npr:
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return BadRequest("Neispravan korisnik.");
 
@@ -53,7 +58,7 @@ namespace BlogAPI.Controllers
             {
                 Title = dto.Title,
                 Content = dto.Content,
-                ImageUrl = dto.ImageUrl, // Ako se slika učitava lokalno, URL bi se kreirao nakon upload-a
+                ImageUrl = dto.ImageUrl,
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow
             };
@@ -63,6 +68,7 @@ namespace BlogAPI.Controllers
 
             return Ok(post);
         }
+
 
         // PUT: api/posts/5
         [HttpPut("{id}")]
@@ -100,7 +106,6 @@ namespace BlogAPI.Controllers
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
-        public int UserId { get; set; }
     }
 
     public class UpdatePostDto
