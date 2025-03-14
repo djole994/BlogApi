@@ -11,12 +11,16 @@ namespace BlogAPI.Controllers
     [Route("api/[controller]")]
     public class PostsController : ControllerBase
     {
+        private readonly IWebHostEnvironment _env;
+
         private readonly ApplicationDbContext _context;
 
-        public PostsController(ApplicationDbContext context)
+        public PostsController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
+
 
         // GET: api/posts
         [HttpGet]
@@ -45,29 +49,45 @@ namespace BlogAPI.Controllers
         // POST: api/posts
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
+        public async Task<IActionResult> CreatePost([FromForm] CreatePostDto dto)
         {
-            // ID korisnika uzimamo iz tokena, npr:
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return BadRequest("Neispravan korisnik.");
+
+            string? imageUrl = null;
+            if (dto.PostImage != null && dto.PostImage.Length > 0)
+            {
+                var webRoot = _env.WebRootPath ?? Directory.GetCurrentDirectory();
+                var uploadsDir = Path.Combine(webRoot, "uploads");
+                if (!Directory.Exists(uploadsDir))
+                {
+                    Directory.CreateDirectory(uploadsDir);
+                }
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.PostImage.FileName);
+                var filePath = Path.Combine(uploadsDir, uniqueFileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.PostImage.CopyToAsync(stream);
+                }
+                imageUrl = $"/uploads/{uniqueFileName}";
+            }
 
             var post = new BlogPost
             {
                 Title = dto.Title,
                 Content = dto.Content,
-                ImageUrl = dto.ImageUrl,
+                ImageUrl = imageUrl,
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.BlogPosts.Add(post);
             await _context.SaveChangesAsync();
-
             return Ok(post);
         }
+
 
 
         // PUT: api/posts/5
@@ -105,7 +125,7 @@ namespace BlogAPI.Controllers
     {
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public string? ImageUrl { get; set; }
+        public IFormFile? PostImage { get; set; }
     }
 
     public class UpdatePostDto
