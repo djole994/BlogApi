@@ -92,15 +92,39 @@ namespace BlogAPI.Controllers
 
         // PUT: api/posts/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePost(int id, [FromBody] UpdatePostDto dto)
+        public async Task<IActionResult> UpdatePost(int id, [FromForm] UpdatePostDto dto)
         {
             var post = await _context.BlogPosts.FindAsync(id);
             if (post == null)
                 return NotFound("Post nije pronađen.");
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (post.UserId != currentUserId)
+                return Forbid("Samo kreator posta može da ga uređuje.");
 
             post.Title = dto.Title;
             post.Content = dto.Content;
-            post.ImageUrl = dto.ImageUrl;
+            if (dto.PostImage != null && dto.PostImage.Length > 0)
+            {
+
+                var webRoot = _env.WebRootPath ?? Directory.GetCurrentDirectory();
+                var uploadsDir = Path.Combine(webRoot, "uploads");
+                if (!Directory.Exists(uploadsDir))
+                {
+                    Directory.CreateDirectory(uploadsDir);
+                }
+
+                var uniqueFileName = Guid.NewGuid().ToString()
+                                     + Path.GetExtension(dto.PostImage.FileName);
+
+                var filePath = Path.Combine(uploadsDir, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.PostImage.CopyToAsync(stream);
+                }
+
+                post.ImageUrl = $"/uploads/{uniqueFileName}";
+            }
 
             await _context.SaveChangesAsync();
             return Ok(post);
@@ -113,6 +137,12 @@ namespace BlogAPI.Controllers
             var post = await _context.BlogPosts.FindAsync(id);
             if (post == null)
                 return NotFound("Post nije pronađen.");
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (post.UserId != currentUserId)
+                return Forbid("Samo kreator posta može da ga obriše.");
+
+
+
 
             _context.BlogPosts.Remove(post);
             await _context.SaveChangesAsync();
@@ -132,6 +162,6 @@ namespace BlogAPI.Controllers
     {
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public string? ImageUrl { get; set; }
+        public IFormFile? PostImage { get; set; }
     }
 }
