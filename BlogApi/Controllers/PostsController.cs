@@ -78,6 +78,7 @@ namespace BlogAPI.Controllers
             {
                 Title = dto.Title,
                 Content = dto.Content,
+                Category = dto.Category,
                 ImageUrl = imageUrl,
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow
@@ -103,6 +104,7 @@ namespace BlogAPI.Controllers
 
             post.Title = dto.Title;
             post.Content = dto.Content;
+            post.Category = dto.Category;
             if (dto.PostImage != null && dto.PostImage.Length > 0)
             {
 
@@ -156,6 +158,7 @@ namespace BlogAPI.Controllers
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public IFormFile? PostImage { get; set; }
+        public string Category { get; set; } = string.Empty;
     }
 
     public class UpdatePostDto
@@ -163,5 +166,6 @@ namespace BlogAPI.Controllers
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public IFormFile? PostImage { get; set; }
+        public string Category { get; set; } = string.Empty;
     }
 }

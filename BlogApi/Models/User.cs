@@ -24,6 +24,8 @@ namespace BlogAPI.Models
         public string? ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string Category { get; set; } = string.Empty;
+
         public int UserId { get; set; }
         [JsonIgnore]
         public User User { get; set; } = null!;
