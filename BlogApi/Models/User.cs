@@ -39,6 +39,12 @@ namespace BlogAPI.Models
         public string Content { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public int? ParentCommentId { get; set; } 
+
+        [JsonIgnore]
+        public Comment? ParentComment { get; set; } 
+
+
         public int BlogPostId { get; set; }
         [JsonIgnore]
         public BlogPost BlogPost { get; set; } = null!;

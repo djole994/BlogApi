@@ -30,6 +30,7 @@ namespace BlogAPI.Controllers
                     CreatedAt = c.CreatedAt,
                     BlogPostId = c.BlogPostId,
                     UserId = c.UserId,
+                    ParentCommentId = c.ParentCommentId,
                     User = c.User == null ? null : new UserDto
                     {
                         Id = c.User.Id,
@@ -58,7 +59,8 @@ namespace BlogAPI.Controllers
                 Content = dto.Content,
                 BlogPostId = post.Id,
                 UserId = user.Id,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                ParentCommentId = dto.ParentCommentId
             };
 
             _context.Comments.Add(comment);
@@ -106,6 +108,8 @@ namespace BlogAPI.Controllers
         public string Content { get; set; } = string.Empty;
         public int BlogPostId { get; set; }
         public int UserId { get; set; }
+        public int? ParentCommentId { get; set; } 
+
     }
     public class UpdateCommentDto
     {
@@ -127,5 +131,7 @@ namespace BlogAPI.Controllers
         public int BlogPostId { get; set; }
         public int UserId { get; set; }
         public UserDto? User { get; set; }
+        public int? ParentCommentId { get; set; }
+
     }
 }
