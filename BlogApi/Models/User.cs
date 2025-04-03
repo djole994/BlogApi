@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlogApi.Models;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -14,6 +15,9 @@ namespace BlogAPI.Models
 
         public ICollection<BlogPost> BlogPosts { get; set; } = new List<BlogPost>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
     }
 
     public class BlogPost

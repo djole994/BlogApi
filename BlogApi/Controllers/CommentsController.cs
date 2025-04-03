@@ -3,6 +3,7 @@ using BlogAPI.Models;
 using BlogApi.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using BlogApi.Models;
 
 namespace BlogAPI.Controllers
 {
@@ -43,11 +44,9 @@ namespace BlogAPI.Controllers
             return Ok(comments);
         }
 
-        // POST: api/comments
         [HttpPost]
         public async Task<IActionResult> CreateComment([FromBody] CreateCommentDto dto)
         {
-            // U stvarnoj aplikaciji, korisnikov Id bi se izvukao iz tokena
             var user = await _context.Users.FindAsync(dto.UserId);
             var post = await _context.BlogPosts.FindAsync(dto.BlogPostId);
 
@@ -66,8 +65,26 @@ namespace BlogAPI.Controllers
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
 
+            // NOVO: Kreiranje notifikacije autoru posta
+            var postAuthor = await _context.Users.FindAsync(post.UserId);
+            if (postAuthor == null)
+                return BadRequest("Autor posta nije pronađen.");
+
+            var message = $"Korisnik '{user.Username}' je komentarisao Vaš post '{post.Title}'.";
+            var notification = new Notification
+            {
+                UserId = postAuthor.Id,
+                Message = message,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
             return Ok(comment);
         }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentDto dto)
